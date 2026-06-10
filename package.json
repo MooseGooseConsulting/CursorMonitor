@@ -1,0 +1,26 @@
+{
+  "name": "cursor-meter-poc",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Local-only Cursor usage/cost meter proof-of-concept. Uses the unofficial personal dashboard JSON endpoints or optional team Admin API.",
+  "type": "module",
+  "engines": {
+    "node": ">=18.17.0"
+  },
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "NODE_ENV=development node src/server.js",
+    "test": "node --test",
+    "smoke:fixture": "node scripts/smoke-fixture.js",
+    "snapshot:today": "node scripts/cli-snapshot.js today",
+    "snapshot:cycle": "node scripts/cli-snapshot.js cycle"
+  },
+  "keywords": [
+    "cursor",
+    "usage",
+    "tokens",
+    "cost",
+    "local-only"
+  ],
+  "license": "UNLICENSED"
+}

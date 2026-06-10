@@ -1,0 +1,11 @@
+.env
+.local/
+.DS_Store
+node_modules/
+npm-debug.log*
+*.sqlite
+*.db
+dist/
+out/
+coverage/
+.vscode-test/
