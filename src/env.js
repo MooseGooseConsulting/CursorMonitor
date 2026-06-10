@@ -30,7 +30,7 @@ export function readConfig({ env = process.env, loadEnv = true } = {}) {
   if (loadEnv) loadDotEnv();
   return {
     host: env.HOST || '127.0.0.1',
-    port: Number(env.PORT || 8787),
+    port: clampInt(env.PORT, 1, 65535, 8787),
     authMode: (env.CURSOR_AUTH_MODE || 'dashboard').toLowerCase(),
     cursorWebBaseUrl: env.CURSOR_WEB_BASE_URL || 'https://cursor.com',
     cursorAdminBaseUrl: env.CURSOR_ADMIN_BASE_URL || 'https://api.cursor.com',

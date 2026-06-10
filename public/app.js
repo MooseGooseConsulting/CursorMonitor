@@ -25,6 +25,7 @@ const els = {
 let pollTimer = null;
 let lastSnapshot = null;
 let allowTokenFromUi = false;
+let snapshotInFlight = false;
 
 init();
 
@@ -71,14 +72,16 @@ async function saveToken() {
 
 async function clearToken() {
   await withBusy(els.clearTokenBtn, async () => {
-    await fetch('/api/token', { method: 'DELETE' });
+    await deleteJson('/api/token');
     await refreshHealth();
   });
 }
 
 async function refreshSnapshot() {
-  await withBusy(els.refreshBtn, async () => {
-    try {
+  if (snapshotInFlight) return;
+  snapshotInFlight = true;
+  try {
+    await withBusy(els.refreshBtn, async () => {
       const params = new URLSearchParams({
         range: els.rangeSelect.value,
         pageSize: els.pageSizeInput.value || '100',
@@ -89,16 +92,25 @@ async function refreshSnapshot() {
       renderCredential(snapshot.credentials);
       renderSnapshot(snapshot);
       els.lastRefresh.textContent = `Last refreshed ${new Date().toLocaleTimeString()} for ${snapshot.query.label}.`;
-    } catch (err) {
-      renderError(err);
-    }
-  });
+    });
+  } catch (err) {
+    renderError(err);
+  } finally {
+    snapshotInFlight = false;
+  }
 }
 
 function schedulePoll() {
-  if (pollTimer) clearInterval(pollTimer);
+  if (pollTimer) clearTimeout(pollTimer);
   const seconds = Number(els.pollSelect.value || 0);
-  if (seconds > 0) pollTimer = setInterval(refreshSnapshot, seconds * 1000);
+  if (seconds <= 0) {
+    pollTimer = null;
+    return;
+  }
+  pollTimer = setTimeout(async () => {
+    await refreshSnapshot();
+    schedulePoll();
+  }, seconds * 1000);
 }
 
 function updateCsvLink() {
@@ -229,6 +241,20 @@ async function postJson(url, body) {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
     body: JSON.stringify(body)
+  });
+  const payload = await res.json().catch(() => ({}));
+  if (!res.ok || payload.ok === false) {
+    const err = new Error(payload.message || `HTTP ${res.status}`);
+    err.details = payload;
+    throw err;
+  }
+  return payload;
+}
+
+async function deleteJson(url) {
+  const res = await fetch(url, {
+    method: 'DELETE',
+    headers: { Accept: 'application/json' }
   });
   const payload = await res.json().catch(() => ({}));
   if (!res.ok || payload.ok === false) {

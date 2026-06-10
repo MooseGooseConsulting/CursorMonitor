@@ -77,9 +77,12 @@ export function normalizeSummary(summary = {}) {
 
 export function normalizeEvent(event = {}) {
   const tokenUsage = event.tokenUsage || {};
-  const inputTokens = asNumber(tokenUsage.inputTokens ?? event.inputTokens ?? event.inputWithCacheWrite ?? event.inputWithoutCacheWrite);
+  const directInputTokens = tokenUsage.inputTokens ?? event.inputTokens;
+  const inputTokens = directInputTokens == null
+    ? sumNumbers(event.inputWithCacheWrite, event.inputWithoutCacheWrite)
+    : asNumber(directInputTokens);
   const outputTokens = asNumber(tokenUsage.outputTokens ?? event.outputTokens);
-  const cacheWriteTokens = asNumber(tokenUsage.cacheWriteTokens ?? event.cacheWriteTokens ?? event.inputWithCacheWrite);
+  const cacheWriteTokens = asNumber(tokenUsage.cacheWriteTokens ?? event.cacheWriteTokens);
   const cacheReadTokens = asNumber(tokenUsage.cacheReadTokens ?? event.cacheReadTokens ?? event.cacheRead);
   const totalTokens = asNumber(
     tokenUsage.totalTokens ??
@@ -91,7 +94,7 @@ export function normalizeEvent(event = {}) {
   const timestampMs = parseTimestampMs(event.timestamp ?? event.eventDate ?? event.date ?? event.createdAt);
 
   return {
-    id: event.id || stableEventId(event),
+    id: explicitEventId(event) || stableEventId(event),
     timestamp: timestampMs,
     isoTime: timestampMs ? new Date(timestampMs).toISOString() : null,
     model: event.model || 'unknown',
@@ -115,15 +118,28 @@ export function normalizeEvent(event = {}) {
   };
 }
 
-export function summarizeEvents(rawEvents = []) {
-  const normalized = rawEvents.map(normalizeEvent).sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+export function normalizeEvents(rawEvents = []) {
+  const normalized = rawEvents
+    .map((rawEvent) => ({
+      event: normalizeEvent(rawEvent),
+      dedupeKey: explicitEventId(rawEvent)
+    }))
+    .sort((a, b) => (b.event.timestamp || 0) - (a.event.timestamp || 0));
+
   const seen = new Set();
   const deduped = [];
-  for (const event of normalized) {
-    if (seen.has(event.id)) continue;
-    seen.add(event.id);
-    deduped.push(event);
+  for (const item of normalized) {
+    if (item.dedupeKey) {
+      if (seen.has(item.dedupeKey)) continue;
+      seen.add(item.dedupeKey);
+    }
+    deduped.push(item.event);
   }
+  return deduped;
+}
+
+export function summarizeEvents(rawEvents = []) {
+  const deduped = normalizeEvents(rawEvents);
 
   const totals = {
     eventCount: deduped.length,
@@ -241,7 +257,7 @@ function parseCents(event) {
 
 function parseMoneyToCents(value) {
   if (value == null) return null;
-  if (typeof value === 'number') return value;
+  if (typeof value === 'number') return value * 100;
   const s = String(value).trim();
   if (!s || s === '-' || /^included$/i.test(s)) return null;
   const numeric = Number(s.replace(/[^0-9.-]/g, ''));
@@ -252,6 +268,10 @@ function parseMoneyToCents(value) {
 function asNumber(value) {
   const n = Number(value || 0);
   return Number.isFinite(n) ? n : 0;
+}
+
+function sumNumbers(...values) {
+  return values.reduce((total, value) => total + asNumber(value), 0);
 }
 
 function asNullableNumber(value) {
@@ -265,6 +285,27 @@ function firstFiniteNumber(...values) {
     if (value == null || value === '') continue;
     const n = Number(value);
     if (Number.isFinite(n)) return n;
+  }
+  return null;
+}
+
+function explicitEventId(event = {}) {
+  return firstPresentString(
+    event.id,
+    event.eventId,
+    event.usageEventId,
+    event.usageEvent?.id,
+    event.requestId,
+    event.request?.id,
+    event.generationId,
+    event.messageId
+  );
+}
+
+function firstPresentString(...values) {
+  for (const value of values) {
+    if (value == null || value === '') continue;
+    return String(value);
   }
   return null;
 }

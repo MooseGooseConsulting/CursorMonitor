@@ -55,7 +55,13 @@ const MIME_BY_EXT = new Map([
 
 export function serveStatic(publicDir, req, res) {
   const url = new URL(req.url, 'http://localhost');
-  let pathname = decodeURIComponent(url.pathname);
+  let pathname;
+  try {
+    pathname = decodeURIComponent(url.pathname);
+  } catch {
+    sendText(res, 400, 'Bad request');
+    return true;
+  }
   if (pathname === '/') pathname = '/index.html';
 
   // Prevent path traversal.
@@ -65,7 +71,13 @@ export function serveStatic(publicDir, req, res) {
     sendText(res, 403, 'Forbidden');
     return true;
   }
-  if (!fs.existsSync(filePath) || !fs.statSync(filePath).isFile()) return false;
+  let stat;
+  try {
+    stat = fs.statSync(filePath);
+  } catch {
+    return false;
+  }
+  if (!stat.isFile()) return false;
 
   const ext = path.extname(filePath).toLowerCase();
   const contentType = MIME_BY_EXT.get(ext) || 'application/octet-stream';
@@ -74,7 +86,15 @@ export function serveStatic(publicDir, req, res) {
     'Cache-Control': 'no-store',
     'X-Content-Type-Options': 'nosniff'
   });
-  fs.createReadStream(filePath).pipe(res);
+  const stream = fs.createReadStream(filePath);
+  stream.on('error', () => {
+    if (!res.headersSent) {
+      sendText(res, 500, 'Unable to read file');
+      return;
+    }
+    res.destroy();
+  });
+  stream.pipe(res);
   return true;
 }
 

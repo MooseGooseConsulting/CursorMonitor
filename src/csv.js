@@ -22,7 +22,8 @@ export function eventsToCsv(events) {
 }
 
 function csvCell(value) {
-  const s = String(value ?? '');
+  let s = String(value ?? '');
+  if (/^[=+\-@]/.test(s)) s = `'${s}`;
   if (/[",\n]/.test(s)) return `"${s.replace(/"/g, '""')}"`;
   return s;
 }

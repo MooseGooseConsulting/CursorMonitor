@@ -6,7 +6,7 @@ import { readConfig } from './env.js';
 import { CursorClient, normalizeWorkosToken } from './cursorClient.js';
 import { eventsToCsv } from './csv.js';
 import { createLogger, redactForLog } from './logger.js';
-import { normalizeSummary, rangeToWindow, summarizeEvents } from './metrics.js';
+import { normalizeEvents, normalizeSummary, rangeToWindow, summarizeEvents } from './metrics.js';
 import { methodNotAllowed, readJsonBody, sendJson, sendText, serveStatic } from './httpUtil.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -128,7 +128,7 @@ async function routeApi(req, res, url) {
 
   if (url.pathname === '/api/events') {
     if (req.method !== 'GET') return methodNotAllowed(res, ['GET']);
-    const params = eventParamsFromUrl(url);
+    const params = await eventParamsFromUrl(url);
     const rawEvents = await client.fetchUsageEventPages(params);
     const aggregate = summarizeEvents(rawEvents.usageEventsDisplay);
     return sendJson(res, 200, {
@@ -197,10 +197,10 @@ async function routeApi(req, res, url) {
 
   if (url.pathname === '/api/export.csv') {
     if (req.method !== 'GET') return methodNotAllowed(res, ['GET']);
-    const params = eventParamsFromUrl(url);
+    const params = await eventParamsFromUrl(url);
     const rawEvents = await client.fetchUsageEventPages(params);
-    const aggregate = summarizeEvents(rawEvents.usageEventsDisplay);
-    const csv = eventsToCsv(aggregate.recentEvents);
+    const events = normalizeEvents(rawEvents.usageEventsDisplay);
+    const csv = eventsToCsv(events);
     res.writeHead(200, {
       'Content-Type': 'text/csv; charset=utf-8',
       'Content-Disposition': 'attachment; filename="cursor-usage-events.csv"',
@@ -222,12 +222,13 @@ async function routeApi(req, res, url) {
   return sendJson(res, 404, { ok: false, error: 'not_found' });
 }
 
-function eventParamsFromUrl(url) {
+async function eventParamsFromUrl(url) {
   const range = url.searchParams.get('range');
   let startDate = url.searchParams.has('startDate') ? Number(url.searchParams.get('startDate')) : undefined;
   let endDate = url.searchParams.has('endDate') ? Number(url.searchParams.get('endDate')) : undefined;
   if (range && !url.searchParams.has('startDate')) {
-    const window = rangeToWindow(range, null);
+    const summary = range === 'cycle' ? await client.getUsageSummary() : null;
+    const window = rangeToWindow(range, summary);
     startDate = window.startDate;
     endDate = window.endDate;
   }
