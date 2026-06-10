@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Cursor Meter POC</title>
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <header class="hero">
+    <div>
+      <p class="eyebrow">Local-only proof of concept</p>
+      <h1>Cursor Meter</h1>
+      <p class="subtle">
+        Polls Cursor’s dashboard JSON from a tiny local Node server, then shows live-ish spend,
+        token totals, models, and recent expensive requests.
+      </p>
+    </div>
+    <div class="status-card" id="credentialCard">
+      <span class="dot" id="credentialDot"></span>
+      <div>
+        <div class="small-label">Credential</div>
+        <strong id="credentialText">Checking…</strong>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <section class="panel security">
+      <strong>Security note:</strong> your Cursor session token is effectively a bearer credential.
+      This page talks only to <code>localhost</code>. Do not deploy this app, do not bind it to a public interface,
+      and do not commit <code>.env</code>.
+    </section>
+
+    <section class="grid two">
+      <div class="panel">
+        <h2>Token setup</h2>
+        <p class="subtle">
+          Best path: put <code>CURSOR_SESSION_TOKEN</code> in <code>.env</code>. This form is disabled unless
+          <code>ALLOW_TOKEN_FROM_UI=true</code>; when enabled, the backend keeps the token in memory only.
+        </p>
+        <label for="tokenInput">WorkosCursorSessionToken</label>
+        <textarea id="tokenInput" spellcheck="false" placeholder="user_...%3A%3AeyJ... or user_...::eyJ... or raw eyJ... JWT"></textarea>
+        <div class="button-row">
+          <button id="saveTokenBtn">Save token in memory</button>
+          <button id="clearTokenBtn" class="secondary">Clear in-memory token</button>
+        </div>
+        <details>
+          <summary>Where to get it</summary>
+          <ol>
+            <li>Open <code>https://cursor.com/dashboard/usage</code> while logged in.</li>
+            <li>Open DevTools → Application → Cookies → <code>https://cursor.com</code>.</li>
+            <li>Copy <code>WorkosCursorSessionToken</code>.</li>
+            <li>Paste here or save as <code>CURSOR_SESSION_TOKEN</code> in <code>.env</code>.</li>
+          </ol>
+        </details>
+      </div>
+
+      <div class="panel">
+        <h2>Refresh controls</h2>
+        <div class="form-grid">
+          <label>
+            Range
+            <select id="rangeSelect">
+              <option value="hour">Last hour</option>
+              <option value="sixHours">Last 6 hours</option>
+              <option value="today" selected>Today</option>
+              <option value="twentyFourHours">Last 24 hours</option>
+              <option value="cycle">Current billing cycle</option>
+              <option value="all">All available events, capped by pages</option>
+            </select>
+          </label>
+          <label>
+            Poll interval
+            <select id="pollSelect">
+              <option value="0">Off</option>
+              <option value="20">20 seconds</option>
+              <option value="60" selected>60 seconds</option>
+              <option value="300">5 minutes</option>
+            </select>
+          </label>
+          <label>
+            Page size
+            <input id="pageSizeInput" type="number" min="1" max="10000" value="100" />
+          </label>
+          <label>
+            Max pages
+            <input id="maxPagesInput" type="number" min="1" max="200" value="3" />
+          </label>
+        </div>
+        <div class="button-row">
+          <button id="refreshBtn">Refresh now</button>
+          <a id="csvLink" class="button secondary" href="/api/export.csv?range=today&pageSize=100&maxPages=3">Export CSV</a>
+        </div>
+        <p class="subtle" id="lastRefresh">Not refreshed yet.</p>
+      </div>
+    </section>
+
+    <section class="cards" id="cards">
+      <article class="metric-card"><span>Window spend</span><strong id="windowSpend">—</strong><small>From detailed events</small></article>
+      <article class="metric-card"><span>Events fetched</span><strong id="eventsFetched">—</strong><small>After local dedupe</small></article>
+      <article class="metric-card"><span>Total tokens</span><strong id="totalTokens">—</strong><small>Input + output + cache</small></article>
+      <article class="metric-card"><span>Last request</span><strong id="lastRequest">—</strong><small>Most recent event</small></article>
+      <article class="metric-card"><span>Cycle plan</span><strong id="cyclePlan">—</strong><small>From usage summary</small></article>
+      <article class="metric-card"><span>On-demand</span><strong id="onDemand">—</strong><small>From usage summary</small></article>
+    </section>
+
+    <section class="grid two">
+      <div class="panel">
+        <h2>Spend by model</h2>
+        <div id="modelTable" class="table-wrap empty">No data yet.</div>
+      </div>
+      <div class="panel">
+        <h2>Most expensive recent events</h2>
+        <div id="expensiveTable" class="table-wrap empty">No data yet.</div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2>Raw-ish response diagnostics</h2>
+      <pre id="diagnostics">No data yet.</pre>
+    </section>
+  </main>
+
+  <script type="module" src="/app.js"></script>
+</body>
+</html>

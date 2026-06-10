@@ -1,0 +1,56 @@
+{
+  "totalUsageEventsCount": 3,
+  "usageEventsDisplay": [
+    {
+      "timestamp": "1781035200000",
+      "model": "claude-4.6-opus-high-thinking",
+      "kind": "USAGE_EVENT_KIND_USAGE_BASED",
+      "requestsCosts": 30.4,
+      "usageBasedCosts": "$1.21",
+      "isTokenBasedCall": true,
+      "tokenUsage": {
+        "inputTokens": 3,
+        "outputTokens": 20525,
+        "cacheWriteTokens": 112151,
+        "cacheReadTokens": 0,
+        "totalCents": 121.41
+      },
+      "cursorTokenFee": 3.32,
+      "isChargeable": true,
+      "isHeadless": false,
+      "chargedCents": 124.73
+    },
+    {
+      "timestamp": "1781031600000",
+      "model": "claude-4.6-sonnet-medium-thinking",
+      "kind": "USAGE_EVENT_KIND_INCLUDED_IN_BUSINESS",
+      "requestsCosts": 1,
+      "usageBasedCosts": "-",
+      "isTokenBasedCall": false,
+      "tokenUsage": {
+        "inputTokens": 1200,
+        "outputTokens": 500,
+        "cacheReadTokens": 12000
+      },
+      "isChargeable": false,
+      "isHeadless": false
+    },
+    {
+      "timestamp": "1781028000000",
+      "model": "composer-2",
+      "kind": "USAGE_EVENT_KIND_USAGE_BASED",
+      "usageBasedCosts": "$0.04",
+      "isTokenBasedCall": true,
+      "tokenUsage": {
+        "inputTokens": 900,
+        "outputTokens": 80,
+        "cacheReadTokens": 13000,
+        "totalCents": 4.01
+      },
+      "cursorTokenFee": 0.12,
+      "isChargeable": true,
+      "isHeadless": true,
+      "chargedCents": 4.13
+    }
+  ]
+}

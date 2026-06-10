@@ -1,0 +1,68 @@
+{
+  "name": "cursor-meter-vscode",
+  "displayName": "Cursor Meter Local POC",
+  "description": "Status bar Cursor usage/cost tracker using the unofficial dashboard JSON endpoint. Local/personal proof of concept only.",
+  "version": "0.1.0",
+  "publisher": "local-poc",
+  "private": true,
+  "engines": {
+    "vscode": "^1.90.0"
+  },
+  "categories": ["Other"],
+  "activationEvents": [
+    "onStartupFinished",
+    "onCommand:cursorMeter.refresh",
+    "onCommand:cursorMeter.setToken",
+    "onCommand:cursorMeter.clearToken",
+    "onCommand:cursorMeter.openPanel"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      { "command": "cursorMeter.refresh", "title": "Cursor Meter: Refresh" },
+      { "command": "cursorMeter.setToken", "title": "Cursor Meter: Set Session Token" },
+      { "command": "cursorMeter.clearToken", "title": "Cursor Meter: Clear Session Token" },
+      { "command": "cursorMeter.openPanel", "title": "Cursor Meter: Open Usage Panel" }
+    ],
+    "configuration": {
+      "title": "Cursor Meter",
+      "properties": {
+        "cursorMeter.refreshSeconds": {
+          "type": "number",
+          "default": 60,
+          "minimum": 20,
+          "description": "Refresh interval in seconds. Be gentle; Cursor dashboard endpoints are unofficial."
+        },
+        "cursorMeter.range": {
+          "type": "string",
+          "enum": ["hour", "today", "twentyFourHours", "cycle"],
+          "default": "today",
+          "description": "Default window for status bar spend."
+        },
+        "cursorMeter.pageSize": {
+          "type": "number",
+          "default": 100,
+          "minimum": 1,
+          "maximum": 10000
+        },
+        "cursorMeter.maxPages": {
+          "type": "number",
+          "default": 2,
+          "minimum": 1,
+          "maximum": 50
+        }
+      }
+    }
+  },
+  "scripts": {
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "package": "npm run compile && npx @vscode/vsce package --allow-missing-repository"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.30",
+    "@types/vscode": "~1.90.0",
+    "typescript": "^5.4.5",
+    "@vscode/vsce": "^2.26.1"
+  }
+}
