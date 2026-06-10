@@ -8,6 +8,13 @@ A local-only proof of concept for tracking Cursor usage/cost with a lightweight 
 
 This is intentionally small and hackable. The personal dashboard endpoints are unofficial and can change without notice.
 
+## Project docs
+
+- [North Star](docs/NORTH_STAR.md): product goals, non-goals, principles, success criteria, and next milestones.
+- [Agent stand-up prompt](docs/AGENT_STANDUP_PROMPT.md): copy/paste prompt for another agent to run this exact app for comparison.
+- [Notes](NOTES.md): endpoint assumptions and design notes.
+- [VS Code extension notes](vscode-extension/README.md): prototype extension setup.
+
 ## What this calls
 
 Personal dashboard mode:
