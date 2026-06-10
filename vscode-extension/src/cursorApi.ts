@@ -107,6 +107,11 @@ async function dashboardFetch(config: CursorConfig, method: string, endpoint: st
       throw new Error(payload.error || payload.message || `Cursor API HTTP ${res.status}`);
     }
     return payload;
+  } catch (err: any) {
+    if (err.name === 'AbortError') {
+      throw new Error(`Cursor dashboard request timed out after ${config.timeoutMs ?? 30000}ms`);
+    }
+    throw err;
   } finally {
     clearTimeout(timeout);
   }
@@ -156,9 +161,37 @@ function dedupe(events: NormalizedEvent[]): NormalizedEvent[] {
 
 function normalizeWorkosToken(input: string): string {
   const value = String(input || '').trim();
+  if (!value) return '';
   if (value.includes('%3A%3A')) return value;
   if (value.includes('::')) return value.replace('::', '%3A%3A');
+  if (looksLikeJwt(value)) {
+    const userId = extractUserIdFromJwt(value);
+    if (userId) return `${userId}%3A%3A${value}`;
+  }
   return value;
+}
+
+function looksLikeJwt(value: string): boolean {
+  return /^[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$/.test(value);
+}
+
+function extractUserIdFromJwt(jwt: string): string {
+  try {
+    const [, payloadPart] = jwt.split('.');
+    const json = Buffer.from(base64UrlToBase64(payloadPart), 'base64').toString('utf8');
+    const payload = JSON.parse(json);
+    const sub = String(payload.sub || '');
+    if (!sub) return '';
+    const pieces = sub.split('|');
+    return pieces[pieces.length - 1] || '';
+  } catch {
+    return '';
+  }
+}
+
+function base64UrlToBase64(value: string): string {
+  const padded = value.replace(/-/g, '+').replace(/_/g, '/');
+  return padded + '='.repeat((4 - (padded.length % 4)) % 4);
 }
 
 function stableId(event: any): string {

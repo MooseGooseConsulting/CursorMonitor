@@ -99,10 +99,18 @@ export function serveStatic(publicDir, req, res) {
 }
 
 export function isPathInside(rootDir, candidatePath) {
-  const root = path.resolve(rootDir);
-  const candidate = path.resolve(candidatePath);
+  const root = realpathOrResolved(rootDir);
+  const candidate = realpathOrResolved(candidatePath);
   const relative = path.relative(root, candidate);
   return relative === '' || (!relative.startsWith('..') && !path.isAbsolute(relative));
+}
+
+function realpathOrResolved(targetPath) {
+  try {
+    return fs.realpathSync(targetPath);
+  } catch {
+    return path.resolve(targetPath);
+  }
 }
 
 export function methodNotAllowed(res, allowed) {

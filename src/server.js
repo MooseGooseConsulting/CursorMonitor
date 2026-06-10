@@ -31,7 +31,7 @@ const server = http.createServer(async (req, res) => {
   });
 
   try {
-    // Local dev CORS only. This lets you call from scripts, but don't bind to 0.0.0.0.
+    // Browser-only CORS for local cross-origin dev pages; keep this bound to localhost.
     res.setHeader('Access-Control-Allow-Origin', `http://${config.host}:${config.port}`);
     res.setHeader('Access-Control-Allow-Methods', 'GET,POST,DELETE,OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type');

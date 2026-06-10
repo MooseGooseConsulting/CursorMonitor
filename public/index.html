@@ -42,8 +42,8 @@
         <label for="tokenInput">WorkosCursorSessionToken</label>
         <textarea id="tokenInput" spellcheck="false" placeholder="user_...%3A%3AeyJ... or user_...::eyJ... or raw eyJ... JWT"></textarea>
         <div class="button-row">
-          <button id="saveTokenBtn">Save token in memory</button>
-          <button id="clearTokenBtn" class="secondary">Clear in-memory token</button>
+          <button id="saveTokenBtn" type="button">Save token in memory</button>
+          <button id="clearTokenBtn" class="secondary" type="button">Clear in-memory token</button>
         </div>
         <details>
           <summary>Where to get it</summary>
@@ -89,7 +89,7 @@
           </label>
         </div>
         <div class="button-row">
-          <button id="refreshBtn">Refresh now</button>
+          <button id="refreshBtn" type="button">Refresh now</button>
           <a id="csvLink" class="button secondary" href="/api/export.csv?range=today&pageSize=100&maxPages=3">Export CSV</a>
         </div>
         <p class="subtle" id="lastRefresh">Not refreshed yet.</p>

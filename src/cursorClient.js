@@ -104,7 +104,8 @@ export class CursorClient {
         pageSize
       });
       const startedAt = Date.now();
-      const payload = await this.getFilteredUsageEvents(body);
+      const payloadRaw = await this.getFilteredUsageEvents(body);
+      const payload = payloadRaw && typeof payloadRaw === 'object' ? payloadRaw : {};
       const pageEvents = Array.isArray(payload.usageEventsDisplay)
         ? payload.usageEventsDisplay
         : Array.isArray(payload.usageEvents)

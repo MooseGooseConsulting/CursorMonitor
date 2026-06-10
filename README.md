@@ -36,7 +36,7 @@ Authorization: Basic <BASE64_CURSOR_ADMIN_KEY>
 ## Quick start
 
 ```bash
-cd cursor-meter-poc
+cd CursorMonitor
 cp .env.example .env
 # edit .env and paste CURSOR_SESSION_TOKEN=<WORKOS_CURSOR_SESSION_TOKEN>
 npm start
