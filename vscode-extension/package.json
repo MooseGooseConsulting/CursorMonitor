@@ -60,8 +60,8 @@
     "package": "npm run compile && npx @vscode/vsce package --allow-missing-repository"
   },
   "devDependencies": {
-    "@types/node": "^20.11.30",
-    "@types/vscode": "~1.90.0",
+    "@types/node": "^20.19.42",
+    "@types/vscode": "~1.134.0",
     "typescript": "^5.4.5",
     "@vscode/vsce": "^2.26.1"
   }
